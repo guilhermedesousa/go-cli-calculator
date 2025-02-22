@@ -12,6 +12,10 @@ type Scanner interface {
 	Scan() string
 }
 
+type Writer interface {
+	Write(message string)
+}
+
 type DefaultScanner struct {
 	scanner *bufio.Scanner
 }
@@ -19,6 +23,12 @@ type DefaultScanner struct {
 func (d *DefaultScanner) Scan() string {
 	d.scanner.Scan()
 	return d.scanner.Text()
+}
+
+type DefaultWriter struct{}
+
+func (d *DefaultWriter) Write(message string) {
+	fmt.Print(message)
 }
 
 func parseInput(input string) (float64, error) {
@@ -43,31 +53,28 @@ func calculate(x float64, y float64, op string) (result float64, err error) {
 	}
 }
 
-func interactiveMode(scanner Scanner) {
-	fmt.Print("Enter first number: ")
+func interactiveMode(scanner Scanner, writer Writer) {
+	writer.Write("Enter first number: ")
 	x, err1 := parseInput(scanner.Scan())
-	if err1 != nil {
-		fmt.Println("Invalid input! Please enter a valid number.")
-		return
-	}
 
-	fmt.Print("Enter an operator (+, -, *, /): ")
+	writer.Write("Enter an operator (+, -, *, /): ")
 	op := scanner.Scan()
 
-	fmt.Print("Enter second number: ")
+	writer.Write("Enter second number: ")
 	y, err2 := parseInput(scanner.Scan())
-	if err2 != nil {
-		fmt.Println("Invalid input! Please enter a valid number.")
+
+	if err1 != nil || err2 != nil {
+		writer.Write("Invalid input! Please enter a valid number.\n")
 		return
 	}
 
 	result, err := calculate(x, y, op)
 	if err != nil {
-		fmt.Println(err)
+		writer.Write(err.Error() + "\n")
 		return
 	}
 
-	fmt.Printf("Result: %.2f %s %.2f = %.2f\n", x, op, y, result)
+	writer.Write(fmt.Sprintf("Result: %.2f %s %.2f = %.2f\n", x, op, y, result))
 }
 
 func CLIMode() {
@@ -91,9 +98,11 @@ func CLIMode() {
 
 func main() {
 	defaultScanner := &DefaultScanner{scanner: bufio.NewScanner(os.Stdin)}
+	defaultWriter := &DefaultWriter{}
+
 	if len(os.Args) == 4 {
 		CLIMode()
 	} else {
-		interactiveMode(defaultScanner)
+		interactiveMode(defaultScanner, defaultWriter)
 	}
 }
