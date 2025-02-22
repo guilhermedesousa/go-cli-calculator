@@ -1,10 +1,29 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
+
+type Scanner interface {
+	Scan() string
+}
+
+type DefaultScanner struct {
+	scanner *bufio.Scanner
+}
+
+func (d *DefaultScanner) Scan() string {
+	d.scanner.Scan()
+	return d.scanner.Text()
+}
+
+func parseInput(input string) (float64, error) {
+	return strconv.ParseFloat(strings.TrimSpace(input), 64)
+}
 
 func calculate(x float64, y float64, op string) (result float64, err error) {
 	switch op {
@@ -24,23 +43,20 @@ func calculate(x float64, y float64, op string) (result float64, err error) {
 	}
 }
 
-func interactiveMode() {
-	var x, y float64
-	var op string
-
+func interactiveMode(scanner Scanner) {
 	fmt.Print("Enter first number: ")
-	_, err := fmt.Scan(&x)
-	if err != nil {
+	x, err1 := parseInput(scanner.Scan())
+	if err1 != nil {
 		fmt.Println("Invalid input! Please enter a valid number.")
 		return
 	}
 
 	fmt.Print("Enter an operator (+, -, *, /): ")
-	fmt.Scan(&op)
+	op := scanner.Scan()
 
 	fmt.Print("Enter second number: ")
-	_, err = fmt.Scan(&y)
-	if err != nil {
+	y, err2 := parseInput(scanner.Scan())
+	if err2 != nil {
 		fmt.Println("Invalid input! Please enter a valid number.")
 		return
 	}
@@ -74,9 +90,10 @@ func CLIMode() {
 }
 
 func main() {
+	defaultScanner := &DefaultScanner{scanner: bufio.NewScanner(os.Stdin)}
 	if len(os.Args) == 4 {
 		CLIMode()
 	} else {
-		interactiveMode()
+		interactiveMode(defaultScanner)
 	}
 }
