@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 )
 
 func calculate(x float64, y float64, op string) (result float64, err error) {
@@ -52,6 +54,29 @@ func interactiveMode() {
 	fmt.Printf("Result: %.2f %s %.2f = %.2f\n", x, op, y, result)
 }
 
+func CLIMode() {
+	x, err1 := strconv.ParseFloat(os.Args[1], 64)
+	op := os.Args[2]
+	y, err2 := strconv.ParseFloat(os.Args[3], 64)
+
+	if err1 != nil || err2 != nil {
+		fmt.Println("Invalid input! Please enter a valid number.")
+		return
+	}
+
+	result, err := calculate(x, y, op)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("Result: %.2f %s %.2f = %.2f\n", x, op, y, result)
+}
+
 func main() {
-	interactiveMode()
+	if len(os.Args) == 4 {
+		CLIMode()
+	} else {
+		interactiveMode()
+	}
 }
