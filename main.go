@@ -35,7 +35,19 @@ func parseInput(input string) (float64, error) {
 	return strconv.ParseFloat(strings.TrimSpace(input), 64)
 }
 
-func calculate(x float64, y float64, op string) (result float64, err error) {
+type DictionaryErr string
+
+func (e DictionaryErr) Error() string {
+	return string(e)
+}
+
+const (
+	ErrorDivisionByZero = DictionaryErr("Division by zero is not allowed")
+	InvalidOperator     = DictionaryErr("Invalid input! Please enter a valid operator")
+	InvalidNumber       = DictionaryErr("Invalid input! Please enter a valid number")
+)
+
+func calculate(x float64, y float64, op string) (float64, error) {
 	switch op {
 	case "+":
 		return x + y, nil
@@ -45,15 +57,15 @@ func calculate(x float64, y float64, op string) (result float64, err error) {
 		return x * y, nil
 	case "/":
 		if y == 0 {
-			return 0, fmt.Errorf("error: division by zero is not allowed")
+			return 0, ErrorDivisionByZero
 		}
 		return x / y, nil
 	default:
-		return 0, fmt.Errorf("error: invalid operator %q", op)
+		return 0, InvalidOperator
 	}
 }
 
-func interactiveMode(scanner Scanner, writer Writer) {
+func interactiveMode(scanner Scanner, writer Writer) error {
 	writer.Write("Enter first number: ")
 	x, err1 := parseInput(scanner.Scan())
 
@@ -64,17 +76,18 @@ func interactiveMode(scanner Scanner, writer Writer) {
 	y, err2 := parseInput(scanner.Scan())
 
 	if err1 != nil || err2 != nil {
-		writer.Write("Invalid input! Please enter a valid number.\n")
-		return
+		writer.Write(InvalidNumber.Error() + "\n")
+		return InvalidNumber
 	}
 
 	result, err := calculate(x, y, op)
 	if err != nil {
 		writer.Write(err.Error() + "\n")
-		return
+		return err
 	}
 
 	writer.Write(fmt.Sprintf("Result: %.2f %s %.2f = %.2f\n", x, op, y, result))
+	return nil
 }
 
 func CLIMode() {
