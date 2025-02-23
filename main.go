@@ -90,23 +90,23 @@ func interactiveMode(scanner Scanner, writer Writer) error {
 	return nil
 }
 
-func CLIMode() {
-	x, err1 := strconv.ParseFloat(os.Args[1], 64)
-	op := os.Args[2]
-	y, err2 := strconv.ParseFloat(os.Args[3], 64)
+func CLIMode(args []string, writer Writer) error {
+	x, err1 := strconv.ParseFloat(strings.TrimSpace(args[1]), 64)
+	op := args[2]
+	y, err2 := strconv.ParseFloat(strings.TrimSpace(args[3]), 64)
 
 	if err1 != nil || err2 != nil {
-		fmt.Println("Invalid input! Please enter a valid number.")
-		return
+		return InvalidNumber
 	}
 
 	result, err := calculate(x, y, op)
 	if err != nil {
-		fmt.Println(err)
-		return
+		writer.Write(err.Error() + "\n")
+		return err
 	}
 
-	fmt.Printf("Result: %.2f %s %.2f = %.2f\n", x, op, y, result)
+	writer.Write(fmt.Sprintf("Result: %.2f %s %.2f = %.2f\n", x, op, y, result))
+	return nil
 }
 
 func main() {
@@ -114,7 +114,7 @@ func main() {
 	defaultWriter := &DefaultWriter{}
 
 	if len(os.Args) == 4 {
-		CLIMode()
+		CLIMode(os.Args, defaultWriter)
 	} else {
 		interactiveMode(defaultScanner, defaultWriter)
 	}
